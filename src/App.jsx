@@ -3,7 +3,7 @@ import Header from "./components/Header";
 import ImageUploader from "./components/ImageUploader";
 import CompressionOptions from "./components/CompressionOptions";
 import ImageList from "./components/ImageList";
-import { convertToWebP } from "./utils/imageProcessing";
+import { convertToWebP, downloadAsZip } from "./utils/imageProcessing";
 
 function App() {
   const [images, setImages] = useState([]);
@@ -13,6 +13,7 @@ function App() {
   const [currentProcessingIndex, setCurrentProcessingIndex] = useState(null);
   const [overallProgress, setOverallProgress] = useState(0);
   const [optionsChanged, setOptionsChanged] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false);
 
   // Track changes to compression options
   useEffect(() => {
@@ -176,6 +177,20 @@ function App() {
     });
   };
 
+  const handleDownloadAsZip = async () => {
+    const completedImages = images.filter(img => img.status === "done");
+    if (completedImages.length === 0) return;
+    
+    setIsDownloading(true);
+    try {
+      await downloadAsZip(completedImages);
+    } catch (error) {
+      console.error("Error creating zip file:", error);
+    } finally {
+      setIsDownloading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-[#f3f3f7] font-sans">
       <Header />
@@ -259,8 +274,10 @@ function App() {
                 images={images}
                 onRemove={handleRemoveImage}
                 onDownloadAll={handleDownloadAll}
+                onDownloadAsZip={handleDownloadAsZip}
                 onReconvert={handleReconvert}
                 isProcessing={isProcessing}
+                isDownloading={isDownloading}
               />
             )}
           </div>

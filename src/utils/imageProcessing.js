@@ -88,3 +88,35 @@ export const simulateProgress = async (callback, steps = 10, duration = 1000) =>
     callback(Math.round((i / steps) * 100));
   }
 };
+
+// Function to create and download a zip file containing multiple images
+export const downloadAsZip = async (images, zipFilename = "webpify-images.zip") => {
+  // Dynamically import JSZip to ensure it's only loaded when needed
+  const JSZip = (await import('jszip')).default;
+  
+  const zip = new JSZip();
+  
+  // Add each converted image to the zip
+  images.forEach(image => {
+    if (image.webpBlob && image.status === "done") {
+      const filename = image.name.replace(/\.[^/.]+$/, "") + ".webp";
+      zip.file(filename, image.webpBlob);
+    }
+  });
+  
+  // Generate the zip file
+  const zipBlob = await zip.generateAsync({ type: "blob" });
+  
+  // Create download link and trigger download
+  const link = document.createElement("a");
+  link.href = URL.createObjectURL(zipBlob);
+  link.download = zipFilename;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  
+  // Clean up the URL object
+  URL.revokeObjectURL(link.href);
+  
+  return true;
+};

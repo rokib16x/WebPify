@@ -1,8 +1,16 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { formatFileSize, calculateSavings } from "../utils/imageProcessing";
-import { Download } from "lucide-react";
+import { Download, Archive } from "lucide-react";
 
-const ImageList = ({ images, onRemove, onDownloadAll, isProcessing, onReconvert }) => {
+const ImageList = ({ 
+  images, 
+  onRemove, 
+  onDownloadAll, 
+  onDownloadAsZip,
+  isProcessing, 
+  isDownloading,
+  onReconvert 
+}) => {
   const [selectedImage, setSelectedImage] = useState(null);
   const [zoomLevel, setZoomLevel] = useState(1);
   const [isDragging, setIsDragging] = useState(false);
@@ -127,6 +135,8 @@ const ImageList = ({ images, onRemove, onDownloadAll, isProcessing, onReconvert 
   };
 
   const completedImages = images.filter((img) => img.status === "done");
+  const showDownloadOptions = completedImages.length > 0;
+  const showZipOption = completedImages.length > 1;
 
   return (
     <div className="bg-white rounded-xl shadow-sm overflow-hidden">
@@ -135,13 +145,39 @@ const ImageList = ({ images, onRemove, onDownloadAll, isProcessing, onReconvert 
           <h2 className="text-lg font-semibold text-[#2c2d2a]">
             {images.length} File{images.length !== 1 ? "s" : ""}
           </h2>
-          <button
-            className="bg-[#0267ff] hover:bg-[#0255ff] disabled:bg-[#f3f3f7] text-white px-4 py-2 rounded-lg font-medium transition-colors shadow-sm disabled:cursor-not-allowed"
-            onClick={onDownloadAll}
-            disabled={completedImages.length === 0 || isProcessing}
-          >
-            Download All
-          </button>
+          
+          {showDownloadOptions && (
+            <div className="flex gap-3">
+              {showZipOption && (
+                <button
+                  className="bg-[#f3f3f7] hover:bg-[#e5e5ea] text-[#2c2d2a] px-4 py-2 rounded-lg font-medium transition-colors shadow-sm flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                  onClick={onDownloadAsZip}
+                  disabled={isProcessing || isDownloading}
+                >
+                  {isDownloading ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-[#2c2d2a] border-t-transparent rounded-full animate-spin"></div>
+                      <span>Creating ZIP...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Archive size={16} />
+                      <span>Download as ZIP</span>
+                    </>
+                  )}
+                </button>
+              )}
+              
+              <button
+                className="bg-[#0267ff] hover:bg-[#0255ff] disabled:bg-[#0267ff]/50 text-white px-4 py-2 rounded-lg font-medium transition-colors shadow-sm flex items-center gap-2 disabled:cursor-not-allowed"
+                onClick={onDownloadAll}
+                disabled={completedImages.length === 0 || isProcessing}
+              >
+                <Download size={16} />
+                <span>Download All</span>
+              </button>
+            </div>
+          )}
         </div>
       </div>
 
