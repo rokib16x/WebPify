@@ -4,6 +4,10 @@ import ImageUploader from "./components/ImageUploader";
 import CompressionOptions from "./components/CompressionOptions";
 import ImageList from "./components/ImageList";
 import { convertToWebP, downloadAsZip } from "./utils/imageProcessing";
+import {
+  incrementConversionCount,
+  getConversionCount,
+} from "./utils/incrementConversion";
 
 function App() {
   const [images, setImages] = useState([]);
@@ -16,6 +20,7 @@ function App() {
   const [isDownloading, setIsDownloading] = useState(false);
   const [lossless, setLossless] = useState(false);
   const [preserveMetadata, setPreserveMetadata] = useState(false);
+  const [conversionCount, setConversionCount] = useState(0);
 
   // Track changes to compression options
   useEffect(() => {
@@ -23,6 +28,16 @@ function App() {
       setOptionsChanged(true);
     }
   }, [compressionLevel, resolution, lossless, preserveMetadata, images]);
+
+  // Fetch conversion count on component mount
+  useEffect(() => {
+    const fetchConversionCount = async () => {
+      const count = await getConversionCount();
+      setConversionCount(count);
+    };
+
+    fetchConversionCount();
+  }, []);
 
   const handleImageUpload = (newImages) => {
     const imageObjects = Array.from(newImages).map((file) => ({
@@ -105,6 +120,12 @@ function App() {
           )
         );
 
+        // Increment conversion count in Supabase
+        await incrementConversionCount();
+
+        // Update local conversion count
+        setConversionCount((prevCount) => prevCount + 1);
+
         processedCount++;
         setOverallProgress(Math.round((processedCount / totalImages) * 100));
       } catch (error) {
@@ -182,9 +203,9 @@ function App() {
   };
 
   const handleDownloadAsZip = async () => {
-    const completedImages = images.filter(img => img.status === "done");
+    const completedImages = images.filter((img) => img.status === "done");
     if (completedImages.length === 0) return;
-    
+
     setIsDownloading(true);
     try {
       await downloadAsZip(completedImages);
@@ -196,101 +217,117 @@ function App() {
   };
 
   return (
-    <div className="min-h-screen bg-[#f3f3f7] font-sans">
+    <div className="min-h-screen bg-[#f3f3f7] font-sans flex flex-col">
       <Header />
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-          <div className="lg:col-span-4 space-y-6">
-            <CompressionOptions
-              compressionLevel={compressionLevel}
-              setCompressionLevel={setCompressionLevel}
-              resolution={resolution}
-              setResolution={setResolution}
-              lossless={lossless}
-              setLossless={setLossless}
-              preserveMetadata={preserveMetadata}
-              setPreserveMetadata={setPreserveMetadata}
-            />
-            <div className="space-y-4">
-              <div className="flex gap-3">
-                <button
-                  className="flex-1 py-3 px-4 bg-[#0267ff] hover:bg-[#0255ff] disabled:bg-[#0267ff]/50 text-white font-semibold rounded-lg transition-colors shadow-sm disabled:cursor-not-allowed"
-                  onClick={handleConvertAll}
-                  disabled={isProcessing || images.length === 0}
-                >
-                  {isProcessing
-                    ? "Converting..."
-                    : optionsChanged
-                    ? "Apply New Settings"
-                    : "Convert to WebP"}
-                </button>
-
-                {images.length > 0 && (
+      <div className="flex-grow">
+        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            <div className="lg:col-span-4 space-y-6">
+              <CompressionOptions
+                compressionLevel={compressionLevel}
+                setCompressionLevel={setCompressionLevel}
+                resolution={resolution}
+                setResolution={setResolution}
+                lossless={lossless}
+                setLossless={setLossless}
+                preserveMetadata={preserveMetadata}
+                setPreserveMetadata={setPreserveMetadata}
+              />
+              <div className="space-y-4">
+                <div className="flex gap-3">
                   <button
-                    className="py-3 px-4 bg-[#f3f3f7] hover:bg-[#e5e5ea] text-[#2c2d2a] font-semibold rounded-lg transition-colors shadow-sm"
-                    onClick={handleReset}
-                    disabled={isProcessing}
+                    className="flex-1 py-3 px-4 bg-[#0267ff] hover:bg-[#0255ff] disabled:bg-[#0267ff]/50 text-white font-semibold rounded-lg transition-colors shadow-sm disabled:cursor-not-allowed"
+                    onClick={handleConvertAll}
+                    disabled={isProcessing || images.length === 0}
                   >
-                    Reset
+                    {isProcessing
+                      ? "Converting..."
+                      : optionsChanged
+                      ? "Apply New Settings"
+                      : "Convert to WebP"}
                   </button>
-                )}
-              </div>
 
-              {isProcessing && (
-                <div className="bg-white rounded-xl p-4 shadow-sm">
-                  <div className="flex justify-between items-center mb-2">
-                    <span className="text-sm font-medium text-[#2c2d2a]">
-                      Overall Progress
-                    </span>
-                    <span className="text-sm font-medium text-[#0267ff]">
-                      {overallProgress}%
-                    </span>
-                  </div>
-                  <div className="bg-[#f3f3f7] rounded-full h-2 overflow-hidden">
-                    <div
-                      className="bg-[#0267ff] h-full rounded-full transition-all duration-300 ease-in-out"
-                      style={{ width: `${overallProgress}%` }}
-                    ></div>
-                  </div>
-                  <p className="text-xs text-[#6b7280] mt-2">
-                    {currentProcessingIndex !== null
-                      ? `Processing: ${
-                          images[currentProcessingIndex]?.name || ""
-                        }`
-                      : "Preparing files..."}
-                  </p>
+                  {images.length > 0 && (
+                    <button
+                      className="py-3 px-4 bg-[#f3f3f7] hover:bg-[#e5e5ea] text-[#2c2d2a] font-semibold rounded-lg transition-colors shadow-sm"
+                      onClick={handleReset}
+                      disabled={isProcessing}
+                    >
+                      Reset
+                    </button>
+                  )}
                 </div>
-              )}
 
-              {optionsChanged &&
-                !isProcessing &&
-                images.some((img) => img.status === "done") && (
-                  <div className="bg-[#fff8e6] border border-[#ffeeba] rounded-xl p-3 text-[#856404] text-sm">
-                    <p>
-                      Compression settings have changed. Click "Apply New
-                      Settings" to update all images.
+                {isProcessing && (
+                  <div className="bg-white rounded-xl p-4 shadow-sm">
+                    <div className="flex justify-between items-center mb-2">
+                      <span className="text-sm font-medium text-[#2c2d2a]">
+                        Overall Progress
+                      </span>
+                      <span className="text-sm font-medium text-[#0267ff]">
+                        {overallProgress}%
+                      </span>
+                    </div>
+                    <div className="bg-[#f3f3f7] rounded-full h-2 overflow-hidden">
+                      <div
+                        className="bg-[#0267ff] h-full rounded-full transition-all duration-300 ease-in-out"
+                        style={{ width: `${overallProgress}%` }}
+                      ></div>
+                    </div>
+                    <p className="text-xs text-[#6b7280] mt-2">
+                      {currentProcessingIndex !== null
+                        ? `Processing: ${
+                            images[currentProcessingIndex]?.name || ""
+                          }`
+                        : "Preparing files..."}
                     </p>
                   </div>
                 )}
+
+                {optionsChanged &&
+                  !isProcessing &&
+                  images.some((img) => img.status === "done") && (
+                    <div className="bg-[#fff8e6] border border-[#ffeeba] rounded-xl p-3 text-[#856404] text-sm">
+                      <p>
+                        Compression settings have changed. Click "Apply New
+                        Settings" to update all images.
+                      </p>
+                    </div>
+                  )}
+              </div>
+            </div>
+            <div className="lg:col-span-8">
+              {images.length === 0 ? (
+                <ImageUploader onImageUpload={handleImageUpload} />
+              ) : (
+                <ImageList
+                  images={images}
+                  onRemove={handleRemoveImage}
+                  onDownloadAll={handleDownloadAll}
+                  onDownloadAsZip={handleDownloadAsZip}
+                  onReconvert={handleReconvert}
+                  isProcessing={isProcessing}
+                  isDownloading={isDownloading}
+                />
+              )}
             </div>
           </div>
-          <div className="lg:col-span-8">
-            {images.length === 0 ? (
-              <ImageUploader onImageUpload={handleImageUpload} />
-            ) : (
-              <ImageList
-                images={images}
-                onRemove={handleRemoveImage}
-                onDownloadAll={handleDownloadAll}
-                onDownloadAsZip={handleDownloadAsZip}
-                onReconvert={handleReconvert}
-                isProcessing={isProcessing}
-                isDownloading={isDownloading}
-              />
-            )}
+        </main>
+      </div>
+      {/* Footer with Conversion Count */}
+      <footer className="bg-white bg-opacity-80 backdrop-blur-sm border-t border-[#f3f3f7] py-4 mt-auto">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-center items-center">
+          <div className="text-center">
+            <p className="text-lg text-[#2c2d2a] opacity-65">
+              Helping creators convert over{" "}
+              <span className="font-bold text-[#0267ff] opacity-85">
+                {conversionCount.toLocaleString()}
+              </span>{" "}
+              images to WebP — and we're just getting started.
+            </p>
           </div>
         </div>
-      </main>
+      </footer>
     </div>
   );
 }
