@@ -63,7 +63,7 @@ const Header = () => {
               <div className="flex justify-center mb-4">
                 <img
                   src="/Root9.png"
-                  alt="Root9 Solutions"
+                  alt="Root9Devs"
                   className="max-h-24 max-w-24 object-contain" // Changed to object-contain and max-h/max-w
                 />
               </div>
@@ -71,12 +71,12 @@ const Header = () => {
                 About WebPify
               </h3>
               <p className="text-sm text-[#6b7280] mt-1">
-                A product of Root9 Solutions
+                A product of Root9Devs
               </p>
             </div>
 
             <p className="text-[#2c2d2a] text-sm leading-relaxed mb-4 text-center">
-              Root9 Solutions is a forward-thinking technology company dedicated
+              Root9Devs is a forward-thinking technology company dedicated
               to delivering innovative solutions that meet the evolving needs of
               businesses. We specialize in tools that enhance efficiency and
               enable digital transformation.

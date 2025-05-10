@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-const CompressionOptions = ({ compressionLevel, setCompressionLevel, resolution, setResolution }) => {
+const CompressionOptions = ({ compressionLevel, setCompressionLevel, resolution, setResolution, lossless, setLossless, preserveMetadata, setPreserveMetadata }) => {
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [widthInput, setWidthInput] = useState("");
   const [heightInput, setHeightInput] = useState("");
@@ -96,6 +96,8 @@ const CompressionOptions = ({ compressionLevel, setCompressionLevel, resolution,
             <input
               type="checkbox"
               id="lossless"
+              checked={lossless}
+              onChange={(e) => setLossless(e.target.checked)}
               className="w-4 h-4 text-[#0267ff] border-[#f3f3f7] rounded focus:ring-[#0267ff]"
             />
             <label htmlFor="lossless" className="ml-2 text-sm text-[#2c2d2a]">
@@ -106,6 +108,8 @@ const CompressionOptions = ({ compressionLevel, setCompressionLevel, resolution,
             <input
               type="checkbox"
               id="metadata"
+              checked={preserveMetadata}
+              onChange={(e) => setPreserveMetadata(e.target.checked)}
               className="w-4 h-4 text-[#0267ff] border-[#f3f3f7] rounded focus:ring-[#0267ff]"
             />
             <label htmlFor="metadata" className="ml-2 text-sm text-[#2c2d2a]">

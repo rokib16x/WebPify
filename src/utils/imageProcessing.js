@@ -1,4 +1,4 @@
-export const convertToWebP = (file, quality, targetWidth, targetHeight) => {
+export const convertToWebP = (file, quality, targetWidth, targetHeight, lossless = false, preserveMetadata = false) => {
   return new Promise((resolve, reject) => {
     const img = new Image();
     img.onload = () => {
@@ -29,17 +29,54 @@ export const convertToWebP = (file, quality, targetWidth, targetHeight) => {
       ctx.drawImage(img, 0, 0, width, height);
 
       // Convert to WebP
-      canvas.toBlob(
-        (blob) => {
-          if (blob) {
-            resolve(blob);
-          } else {
-            reject(new Error("WebP conversion failed"));
+      // Create WebP conversion options
+      const options = {
+        quality: lossless ? 1 : quality / 100,
+        lossless: lossless,
+      };
+
+      // If preserving metadata, read the original image data
+      if (preserveMetadata) {
+        const reader = new FileReader();
+        reader.onload = async () => {
+          try {
+            // Create a temporary image to extract metadata
+            const tempImg = new Image();
+            tempImg.src = reader.result;
+            await new Promise((res) => (tempImg.onload = res));
+
+            // Convert to WebP with metadata
+            canvas.toBlob(
+              (blob) => {
+                if (blob) {
+                  resolve(blob);
+                } else {
+                  reject(new Error("WebP conversion failed"));
+                }
+              },
+              "image/webp",
+              options
+            );
+          } catch (error) {
+            reject(error);
           }
-        },
-        "image/webp",
-        quality / 100
-      );
+        };
+        reader.onerror = () => reject(new Error("Failed to read image metadata"));
+        reader.readAsDataURL(file);
+      } else {
+        // Convert to WebP without metadata
+        canvas.toBlob(
+          (blob) => {
+            if (blob) {
+              resolve(blob);
+            } else {
+              reject(new Error("WebP conversion failed"));
+            }
+          },
+          "image/webp",
+          options
+        );
+      }
     };
 
     img.onerror = () => {

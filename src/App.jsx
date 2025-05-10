@@ -14,13 +14,15 @@ function App() {
   const [overallProgress, setOverallProgress] = useState(0);
   const [optionsChanged, setOptionsChanged] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
+  const [lossless, setLossless] = useState(false);
+  const [preserveMetadata, setPreserveMetadata] = useState(false);
 
   // Track changes to compression options
   useEffect(() => {
     if (images.some((img) => img.status === "done")) {
       setOptionsChanged(true);
     }
-  }, [compressionLevel, resolution, images]);
+  }, [compressionLevel, resolution, lossless, preserveMetadata, images]);
 
   const handleImageUpload = (newImages) => {
     const imageObjects = Array.from(newImages).map((file) => ({
@@ -83,7 +85,9 @@ function App() {
           currentImage.file,
           compressionLevel,
           resolution.width,
-          resolution.height
+          resolution.height,
+          lossless,
+          preserveMetadata
         );
 
         setImages((prev) =>
@@ -202,6 +206,10 @@ function App() {
               setCompressionLevel={setCompressionLevel}
               resolution={resolution}
               setResolution={setResolution}
+              lossless={lossless}
+              setLossless={setLossless}
+              preserveMetadata={preserveMetadata}
+              setPreserveMetadata={setPreserveMetadata}
             />
             <div className="space-y-4">
               <div className="flex gap-3">

@@ -3,7 +3,7 @@
 
 ## Overview
 
-WebPify is a streamlined and powerful online image converter designed to effortlessly transform your images into the WebP format, offering significant file size reductions without compromising visual quality. Leveraging WebP's superior compression techniques, WebPify makes your images lighter, faster to load, and more efficient for web usage. Developed by **Root9 Solutions**, WebPify is the go-to tool for optimizing images in the modern web ecosystem.
+WebPify is a streamlined and powerful online image converter designed to effortlessly transform your images into the WebP format, offering significant file size reductions without compromising visual quality. Leveraging WebP's superior compression techniques, WebPify makes your images lighter, faster to load, and more efficient for web usage. Developed by **Root9Devs**, WebPify is the go-to tool for optimizing images in the modern web ecosystem.
 
 ## Features
 
@@ -42,4 +42,4 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 ---
 
-© 2025 Root9 Solutions. All rights reserved.
+© 2025 Root9Devs. All rights reserved.
