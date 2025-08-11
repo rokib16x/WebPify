@@ -3,11 +3,9 @@ import Header from "./components/Header";
 import ImageUploader from "./components/ImageUploader";
 import CompressionOptions from "./components/CompressionOptions";
 import ImageList from "./components/ImageList";
+import Counter from "./components/Counter";
 import { convertToWebP, downloadAsZip } from "./utils/imageProcessing";
-import {
-  incrementConversionCount,
-  getConversionCount,
-} from "./utils/incrementConversion";
+import { redisCounter } from "./utils/redisCounter";
 
 function App() {
   const [images, setImages] = useState([]);
@@ -21,6 +19,48 @@ function App() {
   const [lossless, setLossless] = useState(false);
   const [preserveMetadata, setPreserveMetadata] = useState(false);
   const [conversionCount, setConversionCount] = useState(0);
+  const [isCounterLoading, setIsCounterLoading] = useState(true);
+
+  // Function to increment conversion counter
+  const incrementConversionCounter = async () => {
+    try {
+      const newCount = await redisCounter.incrementCounter();
+      if (newCount !== null) {
+        setConversionCount(newCount);
+      }
+    } catch (error) {
+      console.error('Error incrementing conversion counter:', error);
+    }
+  };
+
+  // Function to refresh counter display
+  const refreshCounter = async () => {
+    try {
+      setIsCounterLoading(true);
+      const currentCount = await redisCounter.getCounter();
+      setConversionCount(currentCount);
+    } catch (error) {
+      console.error('Error refreshing counter:', error);
+    } finally {
+      setIsCounterLoading(false);
+    }
+  };
+
+  // Load initial counter value
+  useEffect(() => {
+    const loadInitialCounter = async () => {
+      try {
+        const currentCount = await redisCounter.getCounter();
+        setConversionCount(currentCount);
+      } catch (error) {
+        console.error('Error loading initial counter:', error);
+      } finally {
+        setIsCounterLoading(false);
+      }
+    };
+
+    loadInitialCounter();
+  }, []);
 
   // Track changes to compression options
   useEffect(() => {
@@ -29,15 +69,7 @@ function App() {
     }
   }, [compressionLevel, resolution, lossless, preserveMetadata, images]);
 
-  // Fetch conversion count on component mount
-  useEffect(() => {
-    const fetchConversionCount = async () => {
-      const count = await getConversionCount();
-      setConversionCount(count);
-    };
 
-    fetchConversionCount();
-  }, []);
 
   const handleImageUpload = (newImages) => {
     const imageObjects = Array.from(newImages).map((file) => ({
@@ -120,11 +152,8 @@ function App() {
           )
         );
 
-        // Increment conversion count in Supabase
-        await incrementConversionCount();
-
-        // Update local conversion count
-        setConversionCount((prevCount) => prevCount + 1);
+        // Increment conversion counter for successful conversion
+        await incrementConversionCounter();
 
         processedCount++;
         setOverallProgress(Math.round((processedCount / totalImages) * 100));
@@ -314,20 +343,9 @@ function App() {
           </div>
         </main>
       </div>
-      {/* Footer with Conversion Count */}
-      <footer className="bg-white bg-opacity-80 backdrop-blur-sm border-t border-[#f3f3f7] py-4 mt-auto">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-center items-center">
-          <div className="text-center">
-            <p className="text-lg text-[#2c2d2a] opacity-65">
-              Helping creators convert over{" "}
-              <span className="font-bold text-[#0267ff] opacity-85">
-                {conversionCount.toLocaleString()}
-              </span>{" "}
-              images to WebP — and we're just getting started.
-            </p>
-          </div>
-        </div>
-      </footer>
+      
+      {/* Conversion Counter */}
+      <Counter count={conversionCount} isLoading={isCounterLoading} />
     </div>
   );
 }

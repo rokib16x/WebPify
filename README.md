@@ -31,6 +31,34 @@ WebP is the future of web image formats, offering a range of benefits over tradi
 - **High-Quality Conversion**: We prioritize the quality of your images, providing lossless and lossy conversion options to suit your needs.
 - **Optimized for Speed**: With batch processing and fast conversion times, WebPify helps you streamline your image optimization workflow.
 
+## Redis Counter Feature
+
+WebPify includes a built-in conversion counter that tracks the total number of images converted. This feature requires Redis configuration:
+
+### Environment Variables
+
+Create a `.env` file in the root directory with the following variables:
+
+```bash
+VITE_UPSTASH_REDIS_REST_URL=https://your-instance.upstash.io
+VITE_UPSTASH_REDIS_REST_TOKEN=your_redis_token_here
+```
+
+### How It Works
+
+- The counter starts at 3500 if no previous count exists
+- Each successful image conversion increments the counter by 1
+- The current count is displayed at the bottom of the page
+- The counter persists across sessions and server restarts
+
+### Setup Instructions
+
+1. Sign up for [Upstash Redis](https://upstash.com/) (free tier available)
+2. Create a new Redis database
+3. Copy the REST URL and REST Token from your dashboard
+4. Add them to your `.env` file
+5. Restart your development server
+
 ## License
 
 This project is licensed under the MIT License - see the LICENSE file for details.
