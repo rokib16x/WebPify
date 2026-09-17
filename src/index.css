@@ -382,7 +382,8 @@ input[type="range"]::-moz-range-thumb {
 
 .usage-card {
   display: flex;
-  min-width: 285px;
+  width: 285px;
+  max-width: 100%;
   align-items: center;
   gap: 12px;
   border: 1px solid rgba(216, 226, 241, 0.94);
@@ -406,20 +407,27 @@ input[type="range"]::-moz-range-thumb {
 
 .usage-card-copy {
   display: grid;
+  min-width: 0;
   gap: 3px;
 }
 
 .usage-card-copy strong {
+  overflow: hidden;
   color: #172033;
   font-size: 13px;
   font-weight: 800;
   font-variant-numeric: tabular-nums;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .usage-card-copy small {
+  overflow: hidden;
   color: #768195;
   font-size: 10px;
   font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .converter-grid {

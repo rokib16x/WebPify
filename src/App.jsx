@@ -14,6 +14,11 @@ import {
   getOutputFormat,
 } from "./utils/imageProcessing";
 
+const compactNumberFormatter = new Intl.NumberFormat("en", {
+  notation: "compact",
+  maximumFractionDigits: 1,
+});
+
 function App() {
   const [images, setImages] = useState([]);
   const [compressionLevel, setCompressionLevel] = useState(80);
@@ -332,10 +337,17 @@ function App() {
                 <Images size={18} strokeWidth={2} />
               </span>
               <span className="usage-card-copy">
-                <strong aria-live="polite">
+                <strong
+                  aria-live="polite"
+                  title={
+                    conversionCount === null
+                      ? undefined
+                      : `${new Intl.NumberFormat("en").format(conversionCount)} images converted`
+                  }
+                >
                   {conversionCount === null
                     ? "Loading usage..."
-                    : `${new Intl.NumberFormat().format(conversionCount)} images converted`}
+                    : `${compactNumberFormatter.format(conversionCount)} images converted`}
                 </strong>
                 <small>by the WebPify community and counting</small>
               </span>
