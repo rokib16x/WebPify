@@ -1,73 +1,99 @@
-# WebPify - WebP Image Converter
+# WebPify
 
+Browser-based image converter focused on WebP (and related formats). Convert, compress, and resize images locally — no upload to a third-party server for the conversion itself.
 
-## Overview
-
-WebPify is a streamlined and powerful online image converter designed to effortlessly transform your images into the WebP format, offering significant file size reductions without compromising visual quality. Leveraging WebP's superior compression techniques, WebPify makes your images lighter, faster to load, and more efficient for web usage. Built by [Rokib](https://rokib.dev), WebPify is the go-to tool for optimizing images in the modern web ecosystem.
+Built by [Rokib](https://rokib.dev).
 
 ## Features
 
-- **Efficient Image Conversion**: Easily convert images to WebP format with customizable quality settings.
-- **Batch Conversion**: Upload and process multiple images at once, saving time and effort.
-- **Adjustable Compression**: Fine-tune the image quality and compression level with an intuitive slider.
-- **Resize Images**: Option to adjust the resolution of your images during the conversion process.
-- **Real-time Comparison**: Instantly compare the original image with its WebP counterpart side-by-side.
-- **Progress Feedback**: Track the status of the conversion with visual indicators, keeping you informed at all times.
-- **Cross-Device Compatibility**: Enjoy seamless functionality across both desktop and mobile devices.
+- Convert common formats (JPG, PNG, HEIC/HEIF, GIF, BMP, WebP, and more)
+- Batch conversion with ZIP download
+- Quality / compression controls and optional resize
+- Side-by-side original vs converted preview
+- Client-side processing for privacy
+- Optional conversion counter via Upstash Redis (serverless API)
 
-## Why WebP?
+## Stack
 
-WebP is the future of web image formats, offering a range of benefits over traditional formats like JPEG and PNG:
+- [React](https://react.dev/) + [Vite](https://vitejs.dev/)
+- [Tailwind CSS](https://tailwindcss.com/)
+- [heic2any](https://github.com/alexcorvi/heic2any) / related helpers for HEIC
+- [JSZip](https://stuk.github.io/jszip/) for batch downloads
+- [Upstash Redis](https://upstash.com/) (optional, conversion counter)
 
-- **Smaller File Sizes**: WebP compresses images 25-35% smaller than JPEG and 26% smaller than PNG without quality loss, leading to faster website loading times and reduced bandwidth usage.
-- **Enhanced Image Quality**: Even at smaller file sizes, WebP maintains high image quality, allowing you to deliver sharper images without worrying about slow page load speeds.
-- **Lossless and Lossy Compression**: WebP supports both lossless (perfect quality) and lossy (smaller file sizes) compression, giving you flexibility based on your needs.
-- **Transparency Support**: WebP allows transparent images with significantly reduced file sizes compared to PNG, which is ideal for web graphics.
-- **Wide Browser Support**: WebP is widely supported across all modern browsers (Chrome, Firefox, Safari, Edge, etc.), ensuring maximum compatibility.
+## Getting started
 
-## Why Choose WebPify?
+### Prerequisites
 
-- **Simple, Intuitive UI**: WebPify is designed with ease of use in mind. Whether you're an advanced user or a beginner, converting images to WebP is simple and quick.
-- **High-Quality Conversion**: We prioritize the quality of your images, providing lossless and lossy conversion options to suit your needs.
-- **Optimized for Speed**: With batch processing and fast conversion times, WebPify helps you streamline your image optimization workflow.
+- Node.js 18+ and npm
 
-## Redis Counter Feature
-
-WebPify includes a built-in conversion counter that tracks the total number of images converted. This feature requires Redis configuration:
-
-### Environment Variables
-
-Create a `.env` file in the root directory with the following variables:
+### Install
 
 ```bash
-VITE_UPSTASH_REDIS_REST_URL=https://your-instance.upstash.io
-VITE_UPSTASH_REDIS_REST_TOKEN=your_redis_token_here
+git clone https://github.com/rokib16x/WebPify.git
+cd WebPify
+npm install
 ```
 
-### How It Works
+### Develop
 
-- The counter starts at 3500 if no previous count exists
-- Each successful image conversion increments the counter by 1
-- The current count is displayed at the bottom of the page
-- The counter persists across sessions and server restarts
+```bash
+npm run dev
+```
 
-### Setup Instructions
+### Build & preview
 
-1. Sign up for [Upstash Redis](https://upstash.com/) (free tier available)
-2. Create a new Redis database
-3. Copy the REST URL and REST Token from your dashboard
-4. Add them to your `.env` file
-5. Restart your development server
+```bash
+npm run build
+npm run preview
+```
+
+### Lint
+
+```bash
+npm run lint
+```
+
+## Configuration
+
+The UI works without Redis. The global conversion counter uses the serverless handler in `api/conversion-count.js` and expects Upstash’s standard env vars (for example on Vercel):
+
+| Variable | Description |
+| --- | --- |
+| `UPSTASH_REDIS_REST_URL` | Upstash Redis REST URL |
+| `UPSTASH_REDIS_REST_TOKEN` | Upstash Redis REST token |
+
+Copy from your Upstash project dashboard into the host’s environment (or a local `.env` if you wire serverless locally). Do not commit secrets.
+
+## Project layout
+
+```
+├── api/                 # Serverless routes (conversion counter)
+├── public/              # Static assets
+├── src/
+│   ├── components/      # UI
+│   ├── utils/           # Image processing helpers
+│   ├── App.jsx
+│   └── main.jsx
+├── index.html
+└── package.json
+```
+
+## Contributing
+
+Issues and pull requests are welcome.
+
+1. Fork the repo and create a branch from `main`
+2. Make your changes with a clear commit message
+3. Open a PR describing what changed and why
+
+Please keep PRs focused. For larger ideas, open an issue first.
 
 ## License
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+Released under the [MIT License](https://opensource.org/licenses/MIT).
 
 ## Acknowledgments
 
-- WebP format developed by [Google](https://developers.google.com/speed/webp)
-- Icons provided by [Lucide](https://lucide.dev/)
-
----
-
-Built by [Rokib](https://rokib.dev).
+- [WebP](https://developers.google.com/speed/webp) by Google
+- Icons by [Lucide](https://lucide.dev/)
