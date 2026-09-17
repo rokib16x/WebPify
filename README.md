@@ -4,6 +4,9 @@ Browser-based image converter focused on WebP (and related formats). Convert, co
 
 Built by [Rokib](https://rokib.dev).
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
+
 ## Features
 
 - Convert common formats (JPG, PNG, HEIC/HEIF, GIF, BMP, WebP, and more)
@@ -63,7 +66,7 @@ The UI works without Redis. The global conversion counter uses the serverless ha
 | `UPSTASH_REDIS_REST_URL` | Upstash Redis REST URL |
 | `UPSTASH_REDIS_REST_TOKEN` | Upstash Redis REST token |
 
-Copy from your Upstash project dashboard into the host’s environment (or a local `.env` if you wire serverless locally). Do not commit secrets.
+Copy [`.env.example`](.env.example) to `.env` and fill in values locally, or set them in your host’s environment. Do not commit secrets.
 
 ## Project layout
 
@@ -81,17 +84,15 @@ Copy from your Upstash project dashboard into the host’s environment (or a loc
 
 ## Contributing
 
-Issues and pull requests are welcome.
+Contributions are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md) for setup, PR expectations, and coding notes. Please also read our [Code of Conduct](CODE_OF_CONDUCT.md).
 
-1. Fork the repo and create a branch from `main`
-2. Make your changes with a clear commit message
-3. Open a PR describing what changed and why
+## Security
 
-Please keep PRs focused. For larger ideas, open an issue first.
+To report a vulnerability, see [SECURITY.md](SECURITY.md). Do not open a public issue for security reports.
 
 ## License
 
-Released under the [MIT License](https://opensource.org/licenses/MIT).
+This project is licensed under the [MIT License](LICENSE).
 
 ## Acknowledgments
 
