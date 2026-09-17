@@ -1,6 +1,10 @@
-import { useState, useRef, useCallback } from 'react';
-import { Download } from 'lucide-react';
-import { formatFileSize, calculateSavings } from '../utils/imageProcessing';
+import { useState, useRef, useCallback, useEffect } from 'react';
+import { Download, X, Columns2 } from 'lucide-react';
+import {
+  formatFileSize,
+  calculateSavings,
+  getOutputFormat,
+} from '../utils/imageProcessing';
 
 const ImagePreview = ({ 
   selectedImage, 
@@ -8,6 +12,7 @@ const ImagePreview = ({
   onDownloadSingle, 
   onReconvert 
 }) => {
+  const outputLabel = getOutputFormat(selectedImage.outputFormat).label;
   const [zoomLevel, setZoomLevel] = useState(1);
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
@@ -16,6 +21,15 @@ const ImagePreview = ({
   const [sliderPosition, setSliderPosition] = useState(50);
   const imageRef = useRef(null);
   const containerRef = useRef(null);
+
+  useEffect(() => {
+    const handleKeyDown = (event) => {
+      if (event.key === "Escape") onClose();
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [onClose]);
 
   const handleZoomChange = (e) => {
     setZoomLevel(Number.parseFloat(e.target.value));
@@ -71,45 +85,51 @@ const ImagePreview = ({
   };
 
   return (
-    <div className="fixed inset-0 bg-[#2c2d2a] bg-opacity-90 flex justify-center items-center z-50 p-4">
-      <div className="bg-white rounded-xl w-full max-w-5xl max-h-[90vh] overflow-hidden">
-        <div className="flex justify-between items-center p-4 border-b border-[#f3f3f7]">
-          <h3 className="text-lg font-semibold text-[#2c2d2a]">{selectedImage.name}</h3>
-          <div className="flex items-center gap-4">
+    <div
+      className="preview-overlay"
+      onClick={onClose}
+      onMouseMove={handleMouseMove}
+      onMouseUp={handleMouseUp}
+      onMouseLeave={handleMouseUp}
+    >
+      <div className="preview-dialog" onClick={(event) => event.stopPropagation()}>
+        <div className="preview-header">
+          <div className="min-w-0">
+            <h3>{selectedImage.name}</h3>
+            <p>Compare the original with your optimized {outputLabel} image</p>
+          </div>
+          <div className="preview-actions">
             {selectedImage.webpPreview && (
               <button
                 onClick={toggleCompareMode}
-                className={`text-sm px-3 py-1 rounded-lg transition-colors ${
-                  compareMode 
-                    ? "bg-[#0267ff] text-white" 
-                    : "bg-[#f3f3f7] text-[#2c2d2a] hover:bg-[#e5e5ea]"
-                }`}
+                className={`preview-compare-button ${compareMode ? "preview-compare-button-active" : ""}`}
               >
-                Compare
+                <Columns2 size={15} /> Compare
               </button>
             )}
             {selectedImage.status === "done" && (
               <button
                 onClick={() => onDownloadSingle(selectedImage, { stopPropagation: () => {} })}
-                className="text-sm px-3 py-1 rounded-lg bg-[#0267ff] text-white hover:bg-[#0255ff] transition-colors flex items-center gap-1"
+                className="preview-download-button"
               >
-                <Download size={14} /> Download
+                <Download size={15} /> Download
               </button>
             )}
             <button
               onClick={onClose}
-              className="text-[#6b7280] hover:text-[#2c2d2a] text-2xl leading-none"
+              className="preview-close-button"
+              aria-label="Close preview"
             >
-              ×
+              <X size={19} />
             </button>
           </div>
         </div>
 
-        <div className="p-6">
+        <div className="preview-body">
           {compareMode && selectedImage.webpPreview ? (
             <div 
               ref={containerRef}
-              className="relative h-[500px] overflow-hidden border border-[#f3f3f7] rounded-lg"
+              className="preview-compare"
             >
               {/* Original image (background) */}
               <img
@@ -125,7 +145,7 @@ const ImagePreview = ({
               >
                 <img
                   src={selectedImage.webpPreview}
-                  alt="WebP"
+                  alt={outputLabel}
                   className="absolute inset-0 w-full h-full object-contain"
                   style={{ 
                     width: `${100 / (sliderPosition/100)}%`,
@@ -150,15 +170,15 @@ const ImagePreview = ({
                 Original
               </div>
               <div className="absolute top-2 right-2 bg-black bg-opacity-50 text-white text-xs px-2 py-1 rounded">
-                WebP
+                {outputLabel}
               </div>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="border border-[#f3f3f7] rounded-lg overflow-hidden">
-                <h4 className="p-2 text-center bg-[#f3f3f7] font-medium text-[#2c2d2a]">Original</h4>
+            <div className="preview-grid">
+              <div className="preview-panel">
+                <h4>Original</h4>
                 <div
-                  className="h-[400px] overflow-hidden relative bg-white cursor-move"
+                  className="preview-canvas cursor-move"
                   onMouseDown={handleMouseDown}
                 >
                   <img
@@ -173,19 +193,19 @@ const ImagePreview = ({
                   />
                 </div>
                 {selectedImage.originalSize && (
-                  <div className="p-2 text-center text-sm text-[#6b7280]">
+                  <div className="preview-size">
                     Size: {formatFileSize(selectedImage.originalSize)}
                   </div>
                 )}
               </div>
 
               {selectedImage.webpPreview ? (
-                <div className="border border-[#f3f3f7] rounded-lg overflow-hidden">
-                  <h4 className="p-2 text-center bg-[#f3f3f7] font-medium text-[#2c2d2a]">WebP</h4>
-                  <div className="h-[400px] overflow-hidden relative bg-white">
+                <div className="preview-panel">
+                  <h4>{outputLabel}</h4>
+                  <div className="preview-canvas">
                     <img
                       src={selectedImage.webpPreview || "/placeholder.svg"}
-                      alt="WebP"
+                      alt={outputLabel}
                       className="w-full h-full object-contain transition-transform"
                       style={{
                         transform: `scale(${zoomLevel}) translate(${imagePosition.x}px, ${imagePosition.y}px)`,
@@ -193,7 +213,7 @@ const ImagePreview = ({
                     />
                   </div>
                   {selectedImage.webpSize && (
-                    <div className="p-2 text-center text-sm text-[#6b7280]">
+                    <div className="preview-size">
                       Size: {formatFileSize(selectedImage.webpSize)}
                       {selectedImage.originalSize && (
                         <span className="text-[#10b981] ml-2">
@@ -204,9 +224,9 @@ const ImagePreview = ({
                   )}
                 </div>
               ) : (
-                <div className="border border-[#f3f3f7] rounded-lg overflow-hidden flex items-center justify-center">
+                <div className="preview-panel flex items-center justify-center">
                   <div className="text-center p-6">
-                    <p className="text-[#6b7280] mb-2">WebP version not available yet</p>
+                    <p className="text-[#6b7280] mb-2">{outputLabel} version not available yet</p>
                     {selectedImage.status === "processing" ? (
                       <div className="flex justify-center">
                         <div className="w-8 h-8 border-4 border-[#0267ff] border-t-transparent rounded-full animate-spin"></div>
@@ -226,8 +246,8 @@ const ImagePreview = ({
           )}
 
           {!compareMode && (
-            <div className="flex items-center gap-4 mt-6">
-              <label className="text-sm min-w-20 text-[#2c2d2a]">Zoom: {zoomLevel.toFixed(1)}×</label>
+            <div className="preview-zoom">
+              <label>Zoom: {zoomLevel.toFixed(1)}×</label>
               <input
                 type="range"
                 min="1"

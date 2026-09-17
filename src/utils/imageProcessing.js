@@ -1,4 +1,49 @@
-export const convertToWebP = (file, quality, targetWidth, targetHeight, lossless = false, preserveMetadata = false) => {
+const OUTPUT_FORMATS = {
+  webp: { mimeType: "image/webp", extension: "webp", label: "WebP" },
+  jpeg: { mimeType: "image/jpeg", extension: "jpg", label: "JPEG" },
+  png: { mimeType: "image/png", extension: "png", label: "PNG" },
+};
+
+export const getOutputFormat = (format = "webp") =>
+  OUTPUT_FORMATS[format] || OUTPUT_FORMATS.webp;
+
+export const getOutputFilename = (filename, format = "webp") =>
+  `${filename.replace(/\.[^/.]+$/, "")}.${getOutputFormat(format).extension}`;
+
+const isHeicImage = (file) =>
+  ["image/heic", "image/heif"].includes(file.type.toLowerCase()) ||
+  /\.(heic|heif)$/i.test(file.name);
+
+const decodeHeic = async (file) => {
+  const { default: heic2any } = await import("heic2any");
+  const converted = await heic2any({
+    blob: file,
+    toType: "image/png",
+  });
+
+  return Array.isArray(converted) ? converted[0] : converted;
+};
+
+export const createImagePreview = async (file) => {
+  const previewSource = isHeicImage(file) ? await decodeHeic(file) : file;
+  return URL.createObjectURL(previewSource);
+};
+
+export const convertImage = async (
+  file,
+  quality,
+  targetWidth,
+  targetHeight,
+  outputFormat = "webp",
+  lossless = false,
+  preserveMetadata = false
+) => {
+  let imageSource = file;
+
+  if (isHeicImage(file)) {
+    imageSource = await decodeHeic(file);
+  }
+
   return new Promise((resolve, reject) => {
     const img = new Image();
     img.onload = () => {
@@ -26,17 +71,38 @@ export const convertToWebP = (file, quality, targetWidth, targetHeight, lossless
 
       // Draw image to canvas
       const ctx = canvas.getContext("2d");
+      if (!ctx) {
+        URL.revokeObjectURL(img.src);
+        reject(new Error("Canvas is not supported"));
+        return;
+      }
+
+      // JPEG does not support transparency, so use a white background.
+      if (outputFormat === "jpeg") {
+        ctx.fillStyle = "#ffffff";
+        ctx.fillRect(0, 0, width, height);
+      }
       ctx.drawImage(img, 0, 0, width, height);
 
-      // Convert to WebP
-      // Create WebP conversion options
-      const options = {
-        quality: lossless ? 1 : quality / 100,
-        lossless: lossless,
+      const { mimeType } = getOutputFormat(outputFormat);
+      const outputQuality = lossless && outputFormat === "webp" ? 1 : quality / 100;
+      const encodeImage = () => {
+        canvas.toBlob(
+          (blob) => {
+            URL.revokeObjectURL(img.src);
+            if (blob) {
+              resolve(blob);
+            } else {
+              reject(new Error(`${getOutputFormat(outputFormat).label} conversion failed`));
+            }
+          },
+          mimeType,
+          outputQuality
+        );
       };
 
       // If preserving metadata, read the original image data
-      if (preserveMetadata) {
+      if (preserveMetadata && !isHeicImage(file)) {
         const reader = new FileReader();
         reader.onload = async () => {
           try {
@@ -45,45 +111,28 @@ export const convertToWebP = (file, quality, targetWidth, targetHeight, lossless
             tempImg.src = reader.result;
             await new Promise((res) => (tempImg.onload = res));
 
-            // Convert to WebP with metadata
-            canvas.toBlob(
-              (blob) => {
-                if (blob) {
-                  resolve(blob);
-                } else {
-                  reject(new Error("WebP conversion failed"));
-                }
-              },
-              "image/webp",
-              options
-            );
+            encodeImage();
           } catch (error) {
+            URL.revokeObjectURL(img.src);
             reject(error);
           }
         };
-        reader.onerror = () => reject(new Error("Failed to read image metadata"));
+        reader.onerror = () => {
+          URL.revokeObjectURL(img.src);
+          reject(new Error("Failed to read image metadata"));
+        };
         reader.readAsDataURL(file);
       } else {
-        // Convert to WebP without metadata
-        canvas.toBlob(
-          (blob) => {
-            if (blob) {
-              resolve(blob);
-            } else {
-              reject(new Error("WebP conversion failed"));
-            }
-          },
-          "image/webp",
-          options
-        );
+        encodeImage();
       }
     };
 
     img.onerror = () => {
+      URL.revokeObjectURL(img.src);
       reject(new Error("Failed to load image"));
     };
 
-    img.src = URL.createObjectURL(file);
+    img.src = URL.createObjectURL(imageSource);
   });
 };
 
@@ -136,7 +185,7 @@ export const downloadAsZip = async (images, zipFilename = "webpify-images.zip") 
   // Add each converted image to the zip
   images.forEach(image => {
     if (image.webpBlob && image.status === "done") {
-      const filename = image.name.replace(/\.[^/.]+$/, "") + ".webp";
+      const filename = getOutputFilename(image.name, image.outputFormat);
       zip.file(filename, image.webpBlob);
     }
   });

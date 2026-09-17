@@ -1,4 +1,4 @@
-import { ImageIcon } from "lucide-react";
+import { Sun } from "lucide-react";
 import { useState } from "react";
 
 const Header = () => {
@@ -9,43 +9,23 @@ const Header = () => {
   };
 
   return (
-    <header className="bg-white border-b border-[#f3f3f7]">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
-          <div className="flex items-center">
-            <ImageIcon className="h-8 w-8 text-[#0267ff]" />
-            <span className="ml-2 text-xl font-semibold text-[#2c2d2a] font-sans">
-              WebPify
-            </span>
-          </div>
-          <nav className="hidden md:flex space-x-8">
-            <a
-              href="#"
-              className="text-[#0267ff] hover:text-[#0255ff] font-medium"
-            >
-              Home
-            </a>
-            <button
-              onClick={toggleAbout}
-              className="text-[#6b7280] hover:text-[#2c2d2a] font-medium"
-            >
-              About
-            </button>
-          </nav>
-          <button className="bg-[#0267ff] text-white px-4 py-2 rounded-lg hover:bg-[#0255ff] transition-colors font-medium">
-            Feel Free To Use
-          </button>
-        </div>
-      </div>
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-2 pb-5 text-center">
-        <h1 className="text-4xl font-bold text-[#2c2d2a] mb-4 font-sans">
-          WebP Image Converter
-        </h1>
-        <p className="text-[#6b7280] max-w-5xl mx-auto leading-relaxed">
-          Convert your images to WebP format and reduce file size by up to 80%
-          while maintaining high quality. WebP offers superior compression and
-          quality compared to traditional formats like JPEG and PNG.
-        </p>
+    <header className="app-header">
+      <a href="/" className="app-logo" aria-label="WebPify home">
+        <img src="/webpify.png" alt="WebPify" />
+      </a>
+
+      <nav className="header-nav">
+        <a href="#" className="header-nav-active">Home</a>
+        <button onClick={toggleAbout}>About</button>
+      </nav>
+
+      <div className="flex items-center gap-5">
+        <button type="button" className="theme-button" aria-label="Toggle theme">
+          <Sun size={18} strokeWidth={1.6} />
+        </button>
+        <button className="primary-header-button">
+          Feel Free To Use
+        </button>
       </div>
 
       {/* About Modal */}
@@ -60,37 +40,27 @@ const Header = () => {
             </button>
 
             <div className="text-center mb-4">
-              <div className="flex justify-center mb-4">
-                <img
-                  src="/Root9.png"
-                  alt="Root9Devs"
-                  className="max-h-24 max-w-24 object-contain" // Changed to object-contain and max-h/max-w
-                />
-              </div>
               <h3 className="text-xl font-bold text-[#2c2d2a]">
                 About WebPify
               </h3>
               <p className="text-sm text-[#6b7280] mt-1">
-                A product of Root9Devs
+                Built by Rokib
               </p>
             </div>
 
             <p className="text-[#2c2d2a] text-sm leading-relaxed mb-4 text-center">
-              Root9Devs is a forward-thinking technology company dedicated
-              to delivering innovative solutions that meet the evolving needs of
-              businesses. We specialize in tools that enhance efficiency and
-              enable digital transformation.
+              WebPify is a fast, privacy-friendly image converter built to make
+              image optimization simple.
             </p>
 
             <div className="flex justify-center space-x-4 mt-6">
-              <a href="#" className="text-[#0267ff] hover:underline text-sm">
-                Website
-              </a>
-              <a href="#" className="text-[#0267ff] hover:underline text-sm">
-                Contact
-              </a>
-              <a href="#" className="text-[#0267ff] hover:underline text-sm">
-                Privacy Policy
+              <a
+                href="https://rokib.dev"
+                target="_blank"
+                rel="noreferrer"
+                className="text-[#0267ff] hover:underline text-sm"
+              >
+                Visit rokib.dev
               </a>
             </div>
           </div>

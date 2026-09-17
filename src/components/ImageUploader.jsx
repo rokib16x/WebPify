@@ -1,9 +1,11 @@
 import { useRef, useState } from "react";
-import { UploadCloud } from "lucide-react";
+import { ImageIcon, Layers } from "lucide-react";
 
 const ImageUploader = ({ onImageUpload }) => {
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef(null);
+  const isSupportedImage = (file) =>
+    file.type.startsWith("image/") || /\.(heic|heif)$/i.test(file.name);
 
   const handleDragOver = (e) => {
     e.preventDefault();
@@ -19,7 +21,7 @@ const ImageUploader = ({ onImageUpload }) => {
     setIsDragging(false);
 
     if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-      const validFiles = Array.from(e.dataTransfer.files).filter((file) => file.type.startsWith("image/"));
+      const validFiles = Array.from(e.dataTransfer.files).filter(isSupportedImage);
 
       if (validFiles.length > 0) {
         onImageUpload(validFiles);
@@ -40,31 +42,44 @@ const ImageUploader = ({ onImageUpload }) => {
 
   return (
     <div
-      className={`bg-white rounded-xl border-2 border-dashed ${
-        isDragging ? "border-[#0267ff] bg-[#f3f3f7]" : "border-[#f3f3f7] hover:border-[#0267ff]"
-      } p-8 text-center cursor-pointer transition-all h-full min-h-[300px] flex items-center justify-center`}
+      className={`upload-card ${
+        isDragging ? "upload-card-dragging" : ""
+      }`}
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
       onClick={handleClickUpload}
     >
-      <div className="flex flex-col items-center gap-4">
-        <UploadCloud className="w-16 h-16 text-[#0267ff]" />
-        <h3 className="text-xl font-semibold text-[#2c2d2a]">Click, or drop your files here</h3>
-        <p className="text-[#6b7280] max-w-md mx-auto">
-          Supports JPG, PNG, GIF, BMP and other image formats. 
-          Convert to WebP for smaller file sizes and faster loading.
+      <div className="support-badge">
+        <Layers size={12} className="text-[#2878f0]" />
+        Supports JPG, PNG, HEIC, GIF, BMP and more
+      </div>
+
+      <div className="flex flex-col items-center">
+        <div className="upload-icon">
+          <ImageIcon size={36} strokeWidth={1.8} />
+        </div>
+        <h3 className="mt-5 text-[18px] font-bold tracking-[-0.04em] text-[#171a22]">
+          Drag &amp; drop your images here
+        </h3>
+        <p className="mt-1 text-xs text-[#6c7585]">
+          or <span className="font-semibold text-[#2878f0]">click to browse</span>
         </p>
-        <div className="mt-2 bg-[#f3f3f7] rounded-lg p-3 text-sm text-[#6b7280]">
-          <span className="text-[#10b981] font-medium">Pro tip:</span> WebP images are typically 25-35% smaller than JPEG 
-          and 26% smaller than PNG with the same quality.
+        <p className="mt-3 text-[11px] text-[#8a93a3]">
+          You can upload multiple images at once
+        </p>
+
+        <div className="mt-8 flex flex-wrap items-center justify-center gap-2">
+          {["JPG", "PNG", "HEIC", "GIF", "BMP", "WEBP", "•••"].map((format) => (
+            <span key={format} className="file-pill">{format}</span>
+          ))}
         </div>
 
         <input
           type="file"
           ref={fileInputRef}
           onChange={handleFileInputChange}
-          accept="image/*"
+          accept="image/*,.heic,.heif"
           multiple
           className="hidden"
         />

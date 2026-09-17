@@ -1,6 +1,18 @@
 import { useState } from "react";
+import { SlidersHorizontal, ChevronDown } from "lucide-react";
 
-const CompressionOptions = ({ compressionLevel, setCompressionLevel, resolution, setResolution, lossless, setLossless, preserveMetadata, setPreserveMetadata }) => {
+const CompressionOptions = ({
+  compressionLevel,
+  setCompressionLevel,
+  resolution,
+  setResolution,
+  outputFormat,
+  setOutputFormat,
+  lossless,
+  setLossless,
+  preserveMetadata,
+  setPreserveMetadata,
+}) => {
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [widthInput, setWidthInput] = useState("");
   const [heightInput, setHeightInput] = useState("");
@@ -32,39 +44,69 @@ const CompressionOptions = ({ compressionLevel, setCompressionLevel, resolution,
   };
 
   return (
-    <div className="bg-white rounded-xl p-6 shadow-sm">
-      <h2 className="text-lg font-semibold mb-5 text-[#2c2d2a]">Compression Options</h2>
+    <section className="options-card">
+      <div className="mb-5 flex items-center gap-3">
+        <span className="section-icon">
+          <SlidersHorizontal size={17} strokeWidth={1.8} />
+        </span>
+        <h2 className="text-[15px] font-bold tracking-[-0.03em] text-[#161922]">
+          Conversion Options
+        </h2>
+      </div>
 
-      <div className="mb-5">
-        <label className="block mb-2 font-medium text-[#2c2d2a]">Resolution</label>
+      <div className="option-group">
+        <label className="option-label">Output Format</label>
+        <p className="option-help">Choose the format you want to convert to.</p>
+        <div className="format-picker">
+          {[
+            ["webp", "WebP"],
+            ["png", "PNG"],
+            ["jpeg", "JPG"],
+          ].map(([value, label]) => (
+            <button
+              key={value}
+              type="button"
+              onClick={() => setOutputFormat(value)}
+              className={outputFormat === value ? "format-button-active" : "format-button"}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="option-group">
+        <label className="option-label">Resize (Optional)</label>
+        <p className="option-help">Leave empty to keep original dimensions.</p>
         <div className="flex items-center gap-2">
-          <div className="flex-1 relative">
+          <div className="dimension-input">
             <input
               type="text"
+              inputMode="numeric"
               placeholder="Width"
               value={widthInput}
               onChange={handleWidthChange}
-              className="w-full p-2.5 border border-[#f3f3f7] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#0267ff] focus:border-[#0267ff]"
             />
+            <span>px</span>
           </div>
-          <span className="text-[#6b7280]">×</span>
-          <div className="flex-1 relative">
+          <span className="text-xs text-[#a1a8b5]">×</span>
+          <div className="dimension-input">
             <input
               type="text"
+              inputMode="numeric"
               placeholder="Height"
               value={heightInput}
               onChange={handleHeightChange}
-              className="w-full p-2.5 border border-[#f3f3f7] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#0267ff] focus:border-[#0267ff]"
             />
+            <span>px</span>
           </div>
         </div>
-        <p className="text-xs text-[#6b7280] mt-2">Leave blank to maintain original dimensions</p>
       </div>
 
-      <div className="mb-5">
-        <div className="flex justify-between items-center mb-2">
-          <label className="font-medium text-[#2c2d2a]">Compression Quality</label>
-          <span className="font-semibold text-[#0267ff]">{compressionLevel}%</span>
+      <div className="option-group">
+        <div className="mb-2 flex items-center justify-between">
+          <label className="option-label">Compression Quality</label>
+          <span className="text-xs font-bold text-[#2878f0]">{compressionLevel}%</span>
         </div>
         <input
           type="range"
@@ -72,53 +114,57 @@ const CompressionOptions = ({ compressionLevel, setCompressionLevel, resolution,
           max="100"
           value={compressionLevel}
           onChange={(e) => setCompressionLevel(Number.parseInt(e.target.value, 10))}
-          className="w-full h-2 bg-[#f3f3f7] rounded-lg appearance-none cursor-pointer"
+          className="w-full cursor-pointer"
           style={{
-            background: `linear-gradient(to right, #0267ff 0%, #0267ff ${compressionLevel}%, #f3f3f7 ${compressionLevel}%, #f3f3f7 100%)`,
+            background: `linear-gradient(to right, #2878f0 0%, #2878f0 ${compressionLevel}%, #e9edf4 ${compressionLevel}%, #e9edf4 100%)`,
           }}
         />
-        <div className="flex justify-between text-xs text-[#6b7280] mt-1">
-          <span>Lower quality</span>
+        <div className="mt-2 flex justify-between text-[9px] text-[#8a93a3]">
+          <span>Smaller file size</span>
           <span>Higher quality</span>
         </div>
-
-        <button
-          className="text-[#0267ff] text-sm mt-4 hover:underline focus:outline-none flex items-center"
-          onClick={() => setShowAdvanced(!showAdvanced)}
-        >
-          {showAdvanced ? "− Hide Advanced" : "+ Advanced Settings"}
-        </button>
       </div>
 
+      <button
+        type="button"
+        className="advanced-toggle"
+        onClick={() => setShowAdvanced(!showAdvanced)}
+      >
+        <span className="flex items-center gap-2">
+          <SlidersHorizontal size={14} />
+          Advanced Settings
+        </span>
+        <ChevronDown
+          size={14}
+          className={`transition-transform ${showAdvanced ? "rotate-180" : ""}`}
+        />
+      </button>
+
       {showAdvanced && (
-        <div className="pt-4 border-t border-[#f3f3f7] space-y-3">
-          <div className="flex items-center">
-            <input
-              type="checkbox"
-              id="lossless"
-              checked={lossless}
-              onChange={(e) => setLossless(e.target.checked)}
-              className="w-4 h-4 text-[#0267ff] border-[#f3f3f7] rounded focus:ring-[#0267ff]"
-            />
-            <label htmlFor="lossless" className="ml-2 text-sm text-[#2c2d2a]">
-              Lossless conversion
-            </label>
-          </div>
+        <div className="advanced-panel">
+          {outputFormat === "webp" && (
+            <div className="flex items-center">
+              <input
+                type="checkbox"
+                id="lossless"
+                checked={lossless}
+                onChange={(e) => setLossless(e.target.checked)}
+              />
+              <label htmlFor="lossless" className="ml-2">Lossless conversion</label>
+            </div>
+          )}
           <div className="flex items-center">
             <input
               type="checkbox"
               id="metadata"
               checked={preserveMetadata}
               onChange={(e) => setPreserveMetadata(e.target.checked)}
-              className="w-4 h-4 text-[#0267ff] border-[#f3f3f7] rounded focus:ring-[#0267ff]"
             />
-            <label htmlFor="metadata" className="ml-2 text-sm text-[#2c2d2a]">
-              Preserve metadata
-            </label>
+            <label htmlFor="metadata" className="ml-2">Preserve metadata</label>
           </div>
         </div>
       )}
-    </div>
+    </section>
   );
 };
 

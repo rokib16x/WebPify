@@ -1,6 +1,11 @@
 import { useState, useEffect, lazy, Suspense } from "react";
-import { formatFileSize, calculateSavings } from "../utils/imageProcessing";
-import { Download, Archive } from "lucide-react";
+import {
+  formatFileSize,
+  calculateSavings,
+  getOutputFilename,
+  getOutputFormat,
+} from "../utils/imageProcessing";
+import { Download, Archive, ImageIcon } from "lucide-react";
 
 const ImagePreview = lazy(() => import('./ImagePreview'));
 
@@ -28,10 +33,11 @@ const ImageList = ({
     if (image.webpBlob && image.status === "done") {
       const link = document.createElement("a");
       link.href = URL.createObjectURL(image.webpBlob);
-      link.download = image.name.replace(/\.[^/.]+$/, "") + ".webp";
+      link.download = getOutputFilename(image.name, image.outputFormat);
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
+      URL.revokeObjectURL(link.href);
     }
   };
 
@@ -66,8 +72,8 @@ const ImageList = ({
   const showZipOption = completedImages.length > 1;
 
   return (
-    <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-      <div className="p-6 border-b border-[#f3f3f7]">
+    <div className="image-list-card">
+      <div className="image-list-header p-6 border-b border-[#f3f3f7]">
         <div className="flex flex-wrap justify-between items-center gap-4">
           <h2 className="text-lg font-semibold text-[#2c2d2a]">
             {images.length} File{images.length !== 1 ? "s" : ""}
@@ -108,7 +114,7 @@ const ImageList = ({
         </div>
       </div>
 
-      <div className="p-6">
+      <div className="image-list-scroll p-6">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {images.map((image) => {
             const savings = image.webpSize ? calculateSavings(image.originalSize, image.webpSize) : null;
@@ -116,11 +122,18 @@ const ImageList = ({
             return (
               <div key={image.id} className="bg-white rounded-lg overflow-hidden shadow-sm border border-[#f3f3f7] hover:shadow-md transition-shadow">
                 <div className="relative h-40 bg-[#f3f3f7] cursor-pointer" onClick={() => handleImageClick(image)}>
-                  <img
-                    src={image.preview || "/placeholder.svg"}
-                    alt={image.name}
-                    className="w-full h-full object-contain"
-                  />
+                  {image.preview ? (
+                    <img
+                      src={image.preview}
+                      alt={image.name}
+                      className="w-full h-full object-contain"
+                    />
+                  ) : (
+                    <div className="flex h-full flex-col items-center justify-center gap-2 text-xs text-[#8a93a3]">
+                      <ImageIcon size={24} />
+                      <span>Preview unavailable</span>
+                    </div>
+                  )}
                   {image.status === "processing" && (
                     <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-30">
                       <div className="w-8 h-8 border-3 border-white border-t-transparent rounded-full animate-spin"></div>
@@ -134,7 +147,7 @@ const ImageList = ({
                       <button
                         onClick={(e) => handleDownloadSingle(image, e)}
                         className="absolute bottom-2 right-2 bg-white rounded-full p-2 shadow-md hover:bg-[#f3f3f7] transition-colors"
-                        title="Download WebP"
+                        title={`Download ${getOutputFormat(image.outputFormat).label}`}
                       >
                         <Download size={16} className="text-[#0267ff]" />
                       </button>
