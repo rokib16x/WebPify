@@ -9,6 +9,7 @@ const Header = () => {
   };
 
   return (
+    <>
     <header className="app-header">
       <a href="/" className="app-logo" aria-label="WebPify home">
         <img src="/webpify.png" alt="WebPify" />
@@ -27,38 +28,40 @@ const Header = () => {
           Feel Free To Use
         </button>
       </div>
+    </header>
 
-      {/* About Modal */}
       {showAbout && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl max-w-md w-full p-6 relative">
+        <div className="about-overlay" onClick={toggleAbout}>
+          <div className="about-dialog" onClick={(event) => event.stopPropagation()}>
             <button
               onClick={toggleAbout}
-              className="absolute top-4 right-4 text-[#6b7280] hover:text-[#2c2d2a] text-xl"
+              className="about-close"
+              aria-label="Close about dialog"
             >
               ×
             </button>
 
-            <div className="text-center mb-4">
-              <h3 className="text-xl font-bold text-[#2c2d2a]">
+            <div className="text-center mb-5">
+              <img src="/webpify.png" alt="WebPify" className="about-logo" />
+              <h3 className="text-xl font-extrabold text-[#172033]">
                 About WebPify
               </h3>
-              <p className="text-sm text-[#6b7280] mt-1">
+              <p className="text-sm text-[#788396] mt-1">
                 Built by Rokib
               </p>
             </div>
 
-            <p className="text-[#2c2d2a] text-sm leading-relaxed mb-4 text-center">
+            <p className="text-[#4e5a6d] text-sm leading-relaxed mb-5 text-center">
               WebPify is a fast, privacy-friendly image converter built to make
               image optimization simple.
             </p>
 
-            <div className="flex justify-center space-x-4 mt-6">
+            <div className="flex justify-center">
               <a
                 href="https://rokib.dev"
                 target="_blank"
                 rel="noreferrer"
-                className="text-[#0267ff] hover:underline text-sm"
+                className="about-link"
               >
                 Visit rokib.dev
               </a>
@@ -66,7 +69,7 @@ const Header = () => {
           </div>
         </div>
       )}
-    </header>
+    </>
   );
 };
 

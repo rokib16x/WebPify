@@ -5,6 +5,7 @@ import CompressionOptions from "./components/CompressionOptions";
 import ImageList from "./components/ImageList";
 import FeatureFooter from "./components/FeatureFooter";
 import MobileConverter from "./components/MobileConverter";
+import { Images } from "lucide-react";
 import {
   convertImage,
   createImagePreview,
@@ -12,7 +13,6 @@ import {
   getOutputFilename,
   getOutputFormat,
 } from "./utils/imageProcessing";
-import { redisCounter } from "./utils/redisCounter";
 
 function App() {
   const [images, setImages] = useState([]);
@@ -26,58 +26,31 @@ function App() {
   const [lossless, setLossless] = useState(false);
   const [preserveMetadata, setPreserveMetadata] = useState(false);
   const [outputFormat, setOutputFormat] = useState("webp");
-  const [conversionCount, setConversionCount] = useState(0);
-  const [isCounterLoading, setIsCounterLoading] = useState(true);
+  const [conversionCount, setConversionCount] = useState(null);
   const [isCompactViewport, setIsCompactViewport] = useState(
     () => window.matchMedia("(max-width: 1024px)").matches
   );
+
+  useEffect(() => {
+    const loadConversionCount = async () => {
+      try {
+        const response = await fetch("/api/conversion-count");
+        if (!response.ok) throw new Error("Unable to load conversion count");
+        const data = await response.json();
+        setConversionCount(data.count);
+      } catch (error) {
+        console.error("Unable to load conversion count:", error);
+      }
+    };
+
+    loadConversionCount();
+  }, []);
 
   useEffect(() => {
     const mediaQuery = window.matchMedia("(max-width: 1024px)");
     const handleViewportChange = (event) => setIsCompactViewport(event.matches);
     mediaQuery.addEventListener("change", handleViewportChange);
     return () => mediaQuery.removeEventListener("change", handleViewportChange);
-  }, []);
-
-  // Function to increment conversion counter
-  const incrementConversionCounter = async () => {
-    try {
-      const newCount = await redisCounter.incrementCounter();
-      if (newCount !== null) {
-        setConversionCount(newCount);
-      }
-    } catch (error) {
-      console.error('Error incrementing conversion counter:', error);
-    }
-  };
-
-  // Function to refresh counter display
-  const refreshCounter = async () => {
-    try {
-      setIsCounterLoading(true);
-      const currentCount = await redisCounter.getCounter();
-      setConversionCount(currentCount);
-    } catch (error) {
-      console.error('Error refreshing counter:', error);
-    } finally {
-      setIsCounterLoading(false);
-    }
-  };
-
-  // Load initial counter value
-  useEffect(() => {
-    const loadInitialCounter = async () => {
-      try {
-        const currentCount = await redisCounter.getCounter();
-        setConversionCount(currentCount);
-      } catch (error) {
-        console.error('Error loading initial counter:', error);
-      } finally {
-        setIsCounterLoading(false);
-      }
-    };
-
-    loadInitialCounter();
   }, []);
 
   // Track changes to compression options
@@ -115,6 +88,21 @@ function App() {
     );
 
     setImages((prev) => [...prev, ...imageObjects]);
+  };
+
+  const recordConversions = async (amount) => {
+    try {
+      const response = await fetch("/api/conversion-count", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ amount }),
+      });
+      if (!response.ok) throw new Error("Unable to update conversion count");
+      const data = await response.json();
+      setConversionCount(data.count);
+    } catch (error) {
+      console.error("Unable to update conversion count:", error);
+    }
   };
 
   const processImages = async (imagesToProcess) => {
@@ -184,9 +172,6 @@ function App() {
           )
         );
 
-        // Increment conversion counter for successful conversion
-        await incrementConversionCounter();
-
         processedCount++;
         setOverallProgress(Math.round((processedCount / totalImages) * 100));
       } catch (error) {
@@ -204,6 +189,10 @@ function App() {
     setCurrentProcessingIndex(null);
     setIsProcessing(false);
     setOverallProgress(100);
+
+    if (processedCount > 0) {
+      recordConversions(processedCount);
+    }
   };
 
   const handleConvertAll = async () => {
@@ -330,11 +319,27 @@ function App() {
 
         <main className="app-content">
           <section className="hero-section">
-            <div className="hero-badge">ϟ&nbsp;&nbsp; Faster Images. A Lighter Web.</div>
-            <h1>Convert Images to {getOutputFormat(outputFormat).label}</h1>
-            <p>
-              Reduce file size by up to 80% while keeping outstanding quality. Fast, free and privacy-friendly. No sign up required.
-            </p>
+            <div className="hero-copy">
+              <div className="hero-badge">ϟ&nbsp;&nbsp; Faster Images. A Lighter Web.</div>
+              <h1>Convert Images to {getOutputFormat(outputFormat).label}</h1>
+              <p>
+                Reduce file size by up to 80% while keeping outstanding quality. Fast, free and privacy-friendly. No sign up required.
+              </p>
+            </div>
+
+            <aside className="usage-card" aria-label="WebPify usage">
+              <span className="usage-card-icon" aria-hidden="true">
+                <Images size={18} strokeWidth={2} />
+              </span>
+              <span className="usage-card-copy">
+                <strong aria-live="polite">
+                  {conversionCount === null
+                    ? "Loading usage..."
+                    : `${new Intl.NumberFormat().format(conversionCount)} images converted`}
+                </strong>
+                <small>by the WebPify community and counting</small>
+              </span>
+            </aside>
           </section>
 
           <div className="converter-grid">
