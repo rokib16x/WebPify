@@ -4,6 +4,7 @@ import ImageUploader from "./components/ImageUploader";
 import CompressionOptions from "./components/CompressionOptions";
 import ImageList from "./components/ImageList";
 import FeatureFooter from "./components/FeatureFooter";
+import MobileConverter from "./components/MobileConverter";
 import {
   convertImage,
   createImagePreview,
@@ -27,6 +28,16 @@ function App() {
   const [outputFormat, setOutputFormat] = useState("webp");
   const [conversionCount, setConversionCount] = useState(0);
   const [isCounterLoading, setIsCounterLoading] = useState(true);
+  const [isCompactViewport, setIsCompactViewport] = useState(
+    () => window.matchMedia("(max-width: 1024px)").matches
+  );
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia("(max-width: 1024px)");
+    const handleViewportChange = (event) => setIsCompactViewport(event.matches);
+    mediaQuery.addEventListener("change", handleViewportChange);
+    return () => mediaQuery.removeEventListener("change", handleViewportChange);
+  }, []);
 
   // Function to increment conversion counter
   const incrementConversionCounter = async () => {
@@ -259,6 +270,18 @@ function App() {
     });
   };
 
+  const handleDownloadImage = (image) => {
+    if (!image.webpBlob || image.status !== "done") return;
+
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(image.webpBlob);
+    link.download = getOutputFilename(image.name, image.outputFormat);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(link.href);
+  };
+
   const handleDownloadAsZip = async () => {
     const completedImages = images.filter((img) => img.status === "done");
     if (completedImages.length === 0) return;
@@ -272,6 +295,33 @@ function App() {
       setIsDownloading(false);
     }
   };
+
+  if (isCompactViewport) {
+    return (
+      <MobileConverter
+        images={images}
+        onUpload={handleImageUpload}
+        onRemove={handleRemoveImage}
+        onReset={handleReset}
+        onConvert={handleConvertAll}
+        onDownloadAll={handleDownloadAll}
+        onDownloadImage={handleDownloadImage}
+        compressionLevel={compressionLevel}
+        setCompressionLevel={setCompressionLevel}
+        resolution={resolution}
+        setResolution={setResolution}
+        outputFormat={outputFormat}
+        setOutputFormat={setOutputFormat}
+        lossless={lossless}
+        setLossless={setLossless}
+        preserveMetadata={preserveMetadata}
+        setPreserveMetadata={setPreserveMetadata}
+        isProcessing={isProcessing}
+        overallProgress={overallProgress}
+        currentProcessingIndex={currentProcessingIndex}
+      />
+    );
+  }
 
   return (
     <div className="page-stage">

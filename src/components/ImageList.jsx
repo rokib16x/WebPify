@@ -141,8 +141,12 @@ const ImageList = ({
                   )}
                   {image.status === "done" && (
                     <>
-                      <div className="absolute top-2 right-2 bg-[#10b981] text-white text-xs font-bold px-2 py-1 rounded-full">
-                        {savings.percentage}% smaller
+                      <div className={`absolute top-2 right-2 text-white text-xs font-bold px-2 py-1 rounded-full ${
+                        savings.percentage < 0 ? "bg-[#ef6a7d]" : "bg-[#10b981]"
+                      }`}>
+                        {savings.percentage < 0
+                          ? `${Math.abs(savings.percentage)}% larger`
+                          : `${savings.percentage}% smaller`}
                       </div>
                       <button
                         onClick={(e) => handleDownloadSingle(image, e)}

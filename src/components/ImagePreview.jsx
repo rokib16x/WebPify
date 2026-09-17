@@ -216,8 +216,14 @@ const ImagePreview = ({
                     <div className="preview-size">
                       Size: {formatFileSize(selectedImage.webpSize)}
                       {selectedImage.originalSize && (
-                        <span className="text-[#10b981] ml-2">
-                          ({calculateSavings(selectedImage.originalSize, selectedImage.webpSize).percentage}% smaller)
+                        <span className={`ml-2 ${
+                          calculateSavings(selectedImage.originalSize, selectedImage.webpSize).percentage < 0
+                            ? "text-[#dc5f6d]"
+                            : "text-[#10b981]"
+                        }`}>
+                          ({calculateSavings(selectedImage.originalSize, selectedImage.webpSize).percentage < 0
+                            ? `${Math.abs(calculateSavings(selectedImage.originalSize, selectedImage.webpSize).percentage)}% larger`
+                            : `${calculateSavings(selectedImage.originalSize, selectedImage.webpSize).percentage}% smaller`})
                         </span>
                       )}
                     </div>
